@@ -19,17 +19,23 @@ public class PlayerController : MonoBehaviour
         animator.SetInteger("state", 0);
         if (Input.GetKey(KeyCode.D) && this.transform.position != right)
         {
-            animator.SetInteger("state", 1);
             this.transform.position += new Vector3(speed, 0f, 0f);
         }
         if (Input.GetKey(KeyCode.A) && this.transform.position == right)
         {
-            animator.SetInteger("state", 1);
             this.transform.position += new Vector3(-speed, 0f, 0f);
         }
         if (Input.GetKey(KeyCode.F))
         {
+            animator.SetInteger("state", 1);
+        }
+        if (Input.GetKey(KeyCode.G))
+        {
             animator.SetInteger("state", 2);
+        }
+        if (Input.GetKey(KeyCode.R))
+        {
+            animator.SetInteger("state", 3);
         }
     }
 }
