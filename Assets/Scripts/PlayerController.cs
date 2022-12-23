@@ -2,116 +2,113 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum playerState
-{
-    idle = 0,
-    move = 1,
-    kick = 2,
-    ukick = 3,
-    defence = 4,
-    hurt = 5
+public enum playerState {
+  idle = 0,
+  move = 1,
+  kick = 2,
+  ukick = 3,
+  defence = 4,
+  hurt = 5
 }
 
-public class PlayerController : MonoBehaviour
-{
+public class PlayerController : MonoBehaviour {
+  public GameManager gameManager;
+  public int playerId;
+  private playerState curstate = playerState.idle;
+  public float speed = 1f;
+  Vector3 right = new Vector3(-0.3f, -0.3f, 0);
+  
+  [Header("KeyBinds")]
+  public KeyCode moveRight = KeyCode.D;
+  public KeyCode moveLeft = KeyCode.A;
+  public KeyCode downKick = KeyCode.F;
+  public KeyCode upKick = KeyCode.G;
+  public KeyCode defense = KeyCode.R;
 
-    private playerState curstate = playerState.idle;
-    public float speed = 1f;
-    Vector3 right = new Vector3(-0.3f, -0.3f, 0);
-    private Animator animator;
-    private int count = 0;
-    private int delay = 0;
-    // Start is called before the first frame update
-    void Start()
-    {
-        animator = gameObject.GetComponent<Animator>();
-    }
+  private Animator animator;
+  private float delay;
+  
+  // Start is called before the first frame update
+  void Start() {
+    delay = 0;
+    animator = gameObject.GetComponent<Animator>();
+  }
 
-    // Update is called once per frame
-    void Update()
-    {
+  // Update is called once per frame
+  void Update() {
+    if (curstate != playerState.idle) {
+      if (delay >= 0) {
+        delay -= Time.deltaTime;
+      }
+      else {
+        curstate = playerState.idle;
         animator.SetInteger("state", 0);
-        if (curstate != playerState.idle)
-        {
-            if (count < delay)
-            {
-                ++count;
-            }
-            else
-            {
-                curstate = playerState.idle;
-                count = 0;
-            }
-        }
-        else
-        {
-            if (Input.GetKeyDown(KeyCode.D) && this.transform.position != right)
-            {
-                curstate = playerState.move;
-                this.transform.position += new Vector3(speed, 0f, 0f);
-                delay = 100;
-            }
-            else if (Input.GetKeyDown(KeyCode.A) && this.transform.position == right)
-            {
-                curstate = playerState.move;
-                this.transform.position += new Vector3(-speed, 0f, 0f);
-                delay = 100;
-            }
-            else if (Input.GetKeyDown(KeyCode.F))
-            {
-                curstate = playerState.kick;
-                animator.SetInteger("state", 1);
-                delay = 400;
-            }
-            else if (Input.GetKeyDown(KeyCode.G))
-            {
-                curstate = playerState.ukick;
-                animator.SetInteger("state", 2);
-                delay = 300;
-            }
-            else if (Input.GetKeyDown(KeyCode.R))
-            {
-                curstate = playerState.defence;
-                animator.SetInteger("state", 3);
-                delay = 300;
-            }
-        }
+      }
     }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        Player2Controller other = collision.GetComponent<Player2Controller>();
-        playerState otherState = other.getCurState();
-        Debug.Log(otherState);
-        if (curstate == playerState.kick || curstate == playerState.ukick)
-        {
-            if (otherState == playerState.kick || otherState == playerState.ukick)
-            {
-                curstate = playerState.hurt;
-                animator.SetInteger("state", 4);
-                delay = 400;
-            }
-
-        }
-        else if (curstate == playerState.defence)
-        {
-        }
-        else
-        {
-            curstate = playerState.hurt;
-            animator.SetInteger("state", 4);
-            delay = 400;
-        }
+    else {
+      if (Input.GetKeyDown(moveRight) && this.transform.position != right) {
+        curstate = playerState.move;
+        this.transform.position += new Vector3(speed, 0f, 0f);
+      }
+      else if (Input.GetKeyDown(moveLeft) && this.transform.position == right) {
+        curstate = playerState.move;
+        this.transform.position += new Vector3(-speed, 0f, 0f);
+      }
+      else if (Input.GetKeyDown(downKick)) {
+        gameManager.attacker = playerId;
+        curstate = playerState.kick;
+        animator.SetInteger("state", 1);
+      }
+      else if (Input.GetKeyDown(upKick)) {
+        gameManager.attacker = playerId;
+        curstate = playerState.ukick;
+        animator.SetInteger("state", 2);
+      }
+      else if (Input.GetKey(defense)) {
+        gameManager.attacker = playerId;
+        curstate = playerState.defence;
+        animator.SetInteger("state", 3);
+      }
+      else if (Input.GetKeyDown(KeyCode.T)) {
+        curstate = playerState.hurt;
+        animator.SetInteger("state", 4);
+      }
     }
+  }
 
-    public playerState getCurState()
-    {
-        return curstate;
+  public void GetHurt(float delayPre) {
+    if (gameManager.attacker != playerId) {
+      curstate = playerState.hurt;
+      animator.SetTrigger("Hurt-Trigger");
+      delay = delayPre;
     }
+  }
 
-    public void setCurState(playerState newState)
-    {
-        curstate = newState;
+  private void OnTriggerEnter2D(Collider2D collision) {
+    if (collision.gameObject.tag == "Player") {
+      PlayerController other = collision.GetComponent<PlayerController>();
+      playerState otherState = other.getCurState();
+      Debug.Log(otherState);
+      if (curstate == playerState.kick || curstate == playerState.ukick) {
+        if (otherState == playerState.kick || otherState == playerState.ukick) {
+          other.GetHurt(0.4f);
+        }
+      }
+      else if (curstate == playerState.defence){}
+      else {
+        other.GetHurt(0.4f);
+      }
+
+      Debug.Log(other.getCurState());
     }
+  }
+
+  public playerState getCurState() {
+    return curstate;
+  }
+
+  public void setCurState(playerState newState) {
+    curstate = newState;
+  }
 
 }
