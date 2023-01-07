@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum playerState {
   idle = 0,
@@ -13,10 +14,13 @@ public enum playerState {
 
 public class PlayerController : MonoBehaviour {
   public GameManager gameManager;
+  public int health;
+  public Image healthImg;
   public int playerId;
   private playerState curstate = playerState.idle;
   public float speed = 1f;
-  Vector3 right = new Vector3(-0.3f, -0.3f, 0);
+  public Vector3 attackPos = new Vector3(-0.3f, -0.3f, 0);
+  public Vector3 forward = new Vector3(1f, 0f, 0f);
   
   [Header("KeyBinds")]
   public KeyCode moveRight = KeyCode.D;
@@ -30,12 +34,15 @@ public class PlayerController : MonoBehaviour {
   
   // Start is called before the first frame update
   void Start() {
+    health = 100;
     delay = 0;
     animator = gameObject.GetComponent<Animator>();
   }
 
   // Update is called once per frame
   void Update() {
+    SetHealth();
+
     if (curstate != playerState.idle) {
       if (delay >= 0) {
         delay -= Time.deltaTime;
@@ -46,13 +53,13 @@ public class PlayerController : MonoBehaviour {
       }
     }
     else {
-      if (Input.GetKeyDown(moveRight) && this.transform.position != right) {
+      if (Input.GetKeyDown(moveRight) && this.transform.position != attackPos) {
         curstate = playerState.move;
-        this.transform.position += new Vector3(speed, 0f, 0f);
+        this.transform.position += forward * speed;
       }
-      else if (Input.GetKeyDown(moveLeft) && this.transform.position == right) {
+      else if (Input.GetKeyDown(moveLeft) && this.transform.position == attackPos) {
         curstate = playerState.move;
-        this.transform.position += new Vector3(-speed, 0f, 0f);
+        this.transform.position += -forward * speed;
       }
       else if (Input.GetKeyDown(downKick)) {
         gameManager.attacker = playerId;
@@ -81,6 +88,7 @@ public class PlayerController : MonoBehaviour {
       curstate = playerState.hurt;
       animator.SetTrigger("Hurt-Trigger");
       delay = delayPre;
+      health -= 10;
     }
   }
 
@@ -111,4 +119,8 @@ public class PlayerController : MonoBehaviour {
     curstate = newState;
   }
 
+
+  private void SetHealth() {
+    healthImg.fillAmount = (float)health / 100f;
+  }
 }
