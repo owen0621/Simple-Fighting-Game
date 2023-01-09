@@ -29,85 +29,109 @@ public class PlayerController : MonoBehaviour {
   public KeyCode upKick = KeyCode.G;
   public KeyCode defense = KeyCode.R;
 
+  public int distanceState;
+  private BodySourceView _bsv;
+
   private Animator animator;
-  private float delay;
+  public float delay;
   
   // Start is called before the first frame update
   void Start() {
     health = 100;
     delay = 0;
     animator = gameObject.GetComponent<Animator>();
+    _bsv = GameObject.Find("GameManager").GetComponent<BodySourceView>();
   }
 
   // Update is called once per frame
   void Update() {
     SetHealth();
+    distanceState = (playerId == 1) ? _bsv.user1 : _bsv.user2;
 
-    if (curstate != playerState.idle) {
-      if (delay >= 0) {
-        delay -= Time.deltaTime;
-      }
-      else {
-        curstate = playerState.idle;
-        animator.SetInteger("state", 0);
-      }
+    if (delay >= 0) {
+      delay -= Time.deltaTime;
     }
     else {
-      if (Input.GetKeyDown(moveRight) && this.transform.position != attackPos) {
-        curstate = playerState.move;
-        this.transform.position += forward * speed;
+      if (curstate != playerState.idle) {
+        if (delay >= 0) {
+          delay -= Time.deltaTime;
+        }
+        else {
+          curstate = playerState.idle;
+          animator.SetInteger("state", 0);
+        }
       }
-      else if (Input.GetKeyDown(moveLeft) && this.transform.position == attackPos) {
-        curstate = playerState.move;
-        this.transform.position += -forward * speed;
-      }
-      else if (Input.GetKeyDown(downKick)) {
-        gameManager.attacker = playerId;
-        curstate = playerState.kick;
-        animator.SetInteger("state", 1);
-      }
-      else if (Input.GetKeyDown(upKick)) {
-        gameManager.attacker = playerId;
-        curstate = playerState.ukick;
-        animator.SetInteger("state", 2);
-      }
-      else if (Input.GetKey(defense)) {
-        gameManager.attacker = playerId;
-        curstate = playerState.defence;
-        animator.SetInteger("state", 3);
-      }
-      else if (Input.GetKeyDown(KeyCode.T)) {
-        curstate = playerState.hurt;
-        animator.SetInteger("state", 4);
+      else {
+        if (distanceState == 2 && this.transform.position != attackPos) {
+          curstate = playerState.move;
+          this.transform.position += forward * speed;
+        }
+        else if (distanceState == 3 && this.transform.position == attackPos) {
+          curstate = playerState.move;
+          this.transform.position += -forward * speed;
+        }
+        else if (Input.GetKeyDown(downKick)) {
+          curstate = playerState.kick;
+          animator.SetInteger("state", 1);
+          delay = 0.4f;
+        }
+        else if (Input.GetKeyDown(upKick)) {
+          curstate = playerState.ukick;
+          animator.SetInteger("state", 2);
+          delay = 0.3f;
+        }
+        else if (Input.GetKey(defense)) {
+          curstate = playerState.defence;
+          animator.SetInteger("state", 3);
+          delay = 0.4f;
+        }
+        else if (Input.GetKeyDown(KeyCode.T)) {
+          curstate = playerState.hurt;
+          animator.SetInteger("state", 4);
+        }
       }
     }
   }
 
   public void GetHurt(float delayPre) {
-    if (gameManager.attacker != playerId) {
-      curstate = playerState.hurt;
-      animator.SetTrigger("Hurt-Trigger");
-      delay = delayPre;
-      health -= 10;
-    }
+    curstate = playerState.hurt;
+    animator.SetTrigger("Hurt-Trigger");
+    delay += delayPre;
+    health -= 10;
   }
 
   private void OnTriggerEnter2D(Collider2D collision) {
     if (collision.gameObject.tag == "Player") {
       PlayerController other = collision.GetComponent<PlayerController>();
       playerState otherState = other.getCurState();
-      Debug.Log(otherState);
       if (curstate == playerState.kick || curstate == playerState.ukick) {
-        if (otherState == playerState.kick || otherState == playerState.ukick) {
+        if (otherState != playerState.defence) {
           other.GetHurt(0.4f);
+        }
+        else {
+          delay = 1f;
+          curstate = playerState.idle;
+          animator.SetInteger("state", 0);
         }
       }
       else if (curstate == playerState.defence){}
       else {
-        other.GetHurt(0.4f);
+        // other.GetHurt(0.4f);
       }
 
-      Debug.Log(other.getCurState());
+      // if (curstate == playerState.defence) {
+      //   if (otherState == playerState.kick || otherState == playerState.ukick) {
+      //     other.delay = 10000f;
+      //   }
+      // }
+      // else if (curstate == playerState.kick || curstate == playerState.ukick) {
+      //   if (otherState != playerState.defence) {
+      //     Debug.Log(otherState);
+      //     other.GetHurt(0.4f);
+      //   }
+      // }
+
+      // Debug.Log(other.getCurState());
     }
   }
 
