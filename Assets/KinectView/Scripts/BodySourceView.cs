@@ -58,7 +58,7 @@ public class BodySourceView : MonoBehaviour
             return;
         }
         
-        Kinect.Body[] data = _BodyManager.GetData();
+        Kinect.Body[] data = _BodyManager.GetData(); //the bodies
         if (data == null)
         {
             return;
@@ -87,26 +87,50 @@ public class BodySourceView : MonoBehaviour
             // print("Nobody");
             user1=0;
             user2=0;
-            return;
+            // return;
         }else if(trackedIds.Count==1){
             user2=0;
             // print("Only one player");
-            return; 
+            // return; 
         }
         
         List<ulong> knownIds = new List<ulong>(_Bodies.Keys);
+        // print("list.count=="+knownIds.Count);
         
         // First delete untracked bodies
         foreach(ulong trackingId in knownIds)
         {
+            // print("list.count=="+knownIds.Count);
+            if(knownIds.Count==1){
+                // print(knownIds[0]);
+            }else if(knownIds.Count==2){
+                // print(knownIds[0]);
+                // print(knownIds[1]);
+            }
+            
+            
+            // print(knownIds[2]);
+            // print("trackedIds="+trackingId+"\n");
             if(!trackedIds.Contains(trackingId))
             {
                 Destroy(_Bodies[trackingId]);
                 _Bodies.Remove(trackingId);
             }
+            
         }
 
         int body_number=0;
+
+        // print(knownIds);
+        // print("data[0]="+data[0]);
+        // Kinect.Joint source=data[0].Joints[Kinect.JointType.SpineBase];
+        // print("point for :"+source.ToString());
+        // Transform jointObj = _Bodies[data[0].TrackingId].transform.Find(Kinect.JointType.SpineBase.ToString());
+        // // jointObj.localPosition = GetVector3FromJoint(source);
+        // print("data:"+data[0].Joints[Kinect.JointType.SpineBase]);
+        
+
+
         foreach(var body in data)
         {
             if (body == null)
@@ -116,6 +140,7 @@ public class BodySourceView : MonoBehaviour
             
             if(body.IsTracked)
             {
+                print("body_number="+body_number);
                 if(!_Bodies.ContainsKey(body.TrackingId))
                 {
                     _Bodies[body.TrackingId] = CreateBodyObject(body.TrackingId);

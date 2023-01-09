@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour {
   public Image healthImg;
   public int playerId;
   private playerState curstate = playerState.idle;
-  public float speed = 1f;
+  public float speed = 1.2f;
   public Vector3 attackPos = new Vector3(-0.3f, -0.3f, 0);
   public Vector3 forward = new Vector3(1f, 0f, 0f);
   
@@ -97,7 +97,7 @@ public class PlayerController : MonoBehaviour {
     curstate = playerState.hurt;
     animator.SetTrigger("Hurt-Trigger");
     delay += delayPre;
-    health -= 10;
+    health -= 5;
   }
 
   private void OnTriggerEnter2D(Collider2D collision) {
