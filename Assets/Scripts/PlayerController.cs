@@ -121,6 +121,9 @@ public class PlayerController : MonoBehaviour {
 
 
   private void SetHealth() {
+    if (health <= 0) {
+      GameObject.Find("GameManager").GetComponent<GameManager>().GameOver(playerId);
+    }
     healthImg.fillAmount = (float)health / 100f;
   }
 }
